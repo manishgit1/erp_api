@@ -4,10 +4,10 @@ from master.models import ContactMaster, GlobalDistrict, GlobalProvince, GlobalV
 
 class GlobalContactSerializer(serializers.ModelSerializer):
     firstName = serializers.CharField(source='first_name', error_messages = {'required': 'First Name is required!', 'blank': 'First Name cannot be blank!'})
-    middleName = serializers.CharField(source='middle_name',required=False, allow_null=True)
+    middleName = serializers.CharField(source='middle_name',required=False,allow_blank=True)
     lastName = serializers.CharField(source='last_name', error_messages = {'required': 'Last Name is required!', 'blank': 'Last Name cannot be blank!'})
     # alias = serializers.CharField(required=False, allow_null=True)
-    contactNumber = serializers.CharField(source='contact_number',required=False,allow_null=True)
+    contactNumber = serializers.CharField(source='contact_number',required=False,allow_blank=True)
     mobileNumber = serializers.CharField(source='mobile_number',error_messages = {'required': 'Mobile Number is required!', 'blank': 'Mobile Number cannot be blank!'})
     # dateOfBirthBs = serializers.CharField(source='date_of_birth_bs', error_messages = {'required': 'Date of Birth BS is required!', 'blank': 'Date of Birth BS cannot be blank!'})
     # dateOfBirthAd = serializers.DateField(source='date_of_birth_ad')
@@ -39,8 +39,9 @@ class GlobalContactSerializer(serializers.ModelSerializer):
     permanentMunicipalityName =serializers.SerializerMethodField()
     permanentProvinceId = serializers.CharField(source='permanent_province')
     permanentProvince = serializers.ReadOnlyField(source='permanent_province.reference_id')
+    permanentWardNo = serializers.CharField(source='permanent_ward_number', required=False, allow_blank=True)
     referenceId = serializers.ReadOnlyField(source='reference_id')
-    email = serializers.CharField()   
+    email = serializers.CharField(required=False,allow_blank=True)   
 
     class Meta:
         model = ContactMaster
@@ -51,7 +52,7 @@ class GlobalContactSerializer(serializers.ModelSerializer):
                     'citizenshipIssuedDateBs',
                     'permanentDistrictId', 'permanentDistrict', 
                     'permanentMunicipalityId','permanentMunicipality', 'permanentProvinceId', 'permanentProvince', 'email',
-                    'citizenshipIssuedDistrictId', 'citizenshipIssuedDistrict', 'permanentDistrictName', 'permanentMunicipalityName'
+                    'citizenshipIssuedDistrictId', 'citizenshipIssuedDistrict', 'permanentDistrictName', 'permanentMunicipalityName', 'permanentWardNo'
                   ]
 
        
@@ -62,6 +63,13 @@ class GlobalContactSerializer(serializers.ModelSerializer):
           return citizenship_issued_district
        else:
           raise serializers.ValidationError('Invalid Citizenship Issued District Provided')
+
+    def validate_mobileNumber(self,value):
+      db_name = self.context.get('db_name')
+      mobile_number = ContactMaster.objects.using(db_name).filter(mobile_number=value).first()
+      if mobile_number is not None:
+         raise serializers.ValidationError('Mobile Number Already Exists')
+      return value
     # def validate_tempDistrictId(self,value):
     #    db_name = self.context.get('db_name')
     #    temp_district = GlobalDistrict.objects.using(db_name).filter(reference_id=value).first()

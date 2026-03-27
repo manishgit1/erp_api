@@ -35,14 +35,19 @@ class ContactMasterCreateAPIView(APIView):
     
     except ValidationError as exc:
         logger.error(str(exc), exc_info=True)
-        raise ValidationError(self,exc.message)
-    
+        error_msg = {
+            globalparameters.RESULT_CODE: globalparameters.RESULT_VALIDATION_ERROR,
+            globalparameters.RESULT_DESCRIPTION: str(exc.detail)
+        }
+        return Response(error_msg,status=status.HTTP_400_BAD_REQUEST)
+
     except Exception as exc: 
         logger.error(str(exc), exc_info=True)
         error_msg = {
                 globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_INTERNAL_SERVER_ERROR,
                 globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_INTERNAL_SERVER_ERROR
             }
+        return Response(error_msg, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class GlobalContactListAPIView(APIView):
 
@@ -88,7 +93,7 @@ class CheckIfGlobalContactExistsAPIView(APIView):
                     globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_DATA_NOT_FOUND,
                     globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_DATA_NOT_FOUND
                 }
-                return Response(response_msg, status=status.HTTP_404_NOT_FOUND)
+                return Response(response_msg, status=status.HTTP_200_OK)
         
         except Exception as exc:
             logger.error(str(exc), exc_info=True)
@@ -125,7 +130,6 @@ class ContactMasterEditAPIView(APIView):
    
    def post(self,request,pk,*args,**kwargs):
     try:
-       print("hello")
        if request.data['citizenshipIssuedDateAd']:
           request.data['citizenshipIssuedDateBs'] = converter.ad_to_bs(str(request.data['citizenshipIssuedDateAd']))
           request.data['citizenshipIssuedDateAd'] = datetime.strftime(datetime.strptime(str(request.data['citizenshipIssuedDateAd']), '%Y/%M/%d'), '%Y-%M-%d')

@@ -7,3 +7,6 @@ from .views_document_type import *
 from .views_client_type_nationality import *
 from .views_client_type_education import *
 from .views_business_date import *
+from .views_registration_authority import *
+from .views_payment_scheme import *
+from .views_purpose_code import *

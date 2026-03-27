@@ -23,5 +23,6 @@ urlpatterns = [
     path('tools/',include('tools.urls')),
     path('crm/',include('crm.urls')),
     path('auth/',include('user_auth.urls')),
+    path('loan/',include('loan.urls')),
 
 ]

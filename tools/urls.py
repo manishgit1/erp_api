@@ -22,7 +22,16 @@ urlpatterns = [
     path('education/create', views.EducationCreateAPIView.as_view(), name='education-create'),
     path('education/list',views.EducationListAPIView.as_view(),  name='education-list'),
 
+    path('registrationAuthority/create', views.RegistrationAuthorityCreateAPIView.as_view(), name='registration-authority-create'),
+    path('registrationAuthority/list',views.RegistrationAuthorityListAPIView.as_view(),  name='registration-authority-list'),
+
     path('systemDate/getDate',views.GetBusinessDateAPIView.as_view(),name='get-business-date'),
+
+    path('loanPaymentScheme/create', views.LoanPaymentSchemeCreateAPIView.as_view(), name='loan-payment-scheme-create'),
+    path('loanPaymentScheme/list',views.LoanPaymentSchemeListAPIView.as_view(),  name='loan-payment-scheme-list'),
+
+    path('loanPurposeCode/create', views.LoanPurposeCodeCreateAPIView.as_view(), name='loan-purpose-create'),
+    path('loanPurposeCode/list',views.LoanPurposeCodeListAPIView.as_view(),  name='loan-purpose-list'),
 
 
 

@@ -6,3 +6,8 @@ from .models_document_type import *
 from .models_nationality import *
 from .models_education import *
 from .models_system_date import *
+from .models_nominee_relation import *
+from .models_legal_status import *
+from .models_registration_authority import *
+from .models_loan_payment_scheme import *
+from .models_loan_purpose_code import *

@@ -6,3 +6,6 @@ from .serializer_salutation import *
 from .serializer_document_type import *
 from .serializer_nationality import *
 from .serializer_education import *
+from .serializer_registration_authority import *
+from .serializer_payment_scheme import *
+from .serializer_purpose_code import *
