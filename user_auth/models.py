@@ -9,6 +9,14 @@ from django.utils import timezone
 def generate_uuid():
     return str(uuid.uuid4().hex)
 
+from django.conf import settings
+from datetime import timedelta
+
+
+def default_expiry():
+    seconds = getattr(settings, "SESSION_COOKIE_AGE", 900)
+    return timezone.now() + timedelta(seconds=seconds)
+
 from django.contrib.auth.models import BaseUserManager
 
 class UserManager(BaseUserManager):
