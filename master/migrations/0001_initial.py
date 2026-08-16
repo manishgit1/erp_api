@@ -128,4 +128,3 @@ class Migration(migrations.Migration):
             },
         ),
     ]
-        migrations.CreateModel(
