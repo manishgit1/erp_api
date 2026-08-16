@@ -72,6 +72,7 @@ class LoanRequestHistory(GenericIdEntity):
         ('REJECTED', 'Rejected'),
         ('RETURNED', 'Returned'),
         ('CANCELLED', 'Cancelled'),
+        ('DISBURSED', 'Disbursed'),
     )
 
     # Core relation

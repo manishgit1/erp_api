@@ -23,4 +23,5 @@ urlpatterns = [
   path('clientMaster/<str:pk>/findById', views.ClientMasterDataByIdAPIView.as_view(), name='client-master-data-by-id-api'),
   path('clientMaster/<str:pk>/edit', views.ClientMasterEditAPIView.as_view(), name='client-master-edit'),
   path('clientMaster/getLeadData/',views.ClientMasterGetLeadDataAPIView.as_view(),name='client-master-get-lead-data'),
+  path('dashboard/metrics/', views.DashboardMetricsAPIView.as_view(), name='dashboard-metrics'),
 ]

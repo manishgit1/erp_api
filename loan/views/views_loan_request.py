@@ -1,8 +1,9 @@
 from email.policy import default
 from rest_framework import generics, status
 from rest_framework.response import Response
-from loan.models import LoanRequest, RequestWorkflow, RoleTransactionLimit, LoanRequestHistory
+from loan.models import LoanRequest, RequestWorkflow, RoleTransactionLimit, LoanRequestHistory, LoanLedger
 from loan.serializers import LoanRequestSerializer
+from crm.models import LeadQuotation, LeadQuotationDocuments
 
 from rest_framework.views import APIView
 from master import globalparameters
@@ -381,6 +382,70 @@ class ApprovedLoanRequestListAPIView(APIView):
             return Response(error_msg, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class DisbursedLoanRequestListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request, format=None):
+        try:
+            _ = globalparameters.validation_for_authentication_parameters(request)
+            loan_request_data = list(LoanRequest.objects.using(DB_NAME).filter(is_void=False, status='DISBURSED').annotate(
+                referenceId=F('reference_id'),
+                clientName=Concat(
+                    Coalesce(F('client__first_name'), Value('')),
+                    Value(' '),
+                    Coalesce(F('client__middle_name'), Value('')),
+                    Value(' '),
+                    Coalesce(F('client__last_name'), Value(''))
+                ),
+                clientCode=F('client__client_code'),
+                mobileNumber=F('client__mobile_number'),
+                permanentAddress=Concat(
+                    Coalesce(F('client__permanent_municipality__name'), Value('')),
+                    Value('-'),
+                    Coalesce(F('client__permanent_ward_number'), Value('')),
+                    Value(', '),
+                    Coalesce(F('client__permanent_district__name'), Value(''))
+                ),
+                loanType=F('loan_type__name'),
+                loanPurpose=F('loan_purpose__name'),
+                loanAmount=F('amount'),
+                tenureMonths=F('tenure_months'),
+                interestRate=F('interest_rate'),
+                valueDateAd=F('value_date_ad'),
+                emiDateAd=F('emi_date_ad'),
+                createdBy=F('created_by__username'),
+                createdAt=F('created_at'),
+                updatedBy=F('updated_by__username'),
+                updatedAt=F('updated_at'),
+                canApprove=Case(
+                    When(follower_role_id=request.user.role_id, then=Value(True)),
+                    default=Value(False),
+                    output_field=BooleanField()
+                ),
+                canEdit=Case(
+                    When(follower_role_id=request.user.role_id, then=Value(True)),
+                    default=Value(False),
+                    output_field=BooleanField()
+                ),
+            ).values('referenceId', 'clientName', 'clientCode', 'mobileNumber', 'permanentAddress', 'loanType', 'loanPurpose', 'loanAmount', 'tenureMonths', 'interestRate', 'valueDateAd', 'emiDateAd', 'status', 'remarks', 'createdBy', 'createdAt', 'updatedBy', 'updatedAt', 'canApprove', 'canEdit'))
+
+            response_msg = {
+                globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_SUCCESS,
+                globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_DESCRIPTION_SUCCESS,
+                "datas": loan_request_data
+            }
+            return Response(response_msg, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(str(e), exc_info=True)
+            error_msg = {
+                globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_INTERNAL_SERVER_ERROR,
+                globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_INTERNAL_SERVER_ERROR
+            }
+            return Response(error_msg, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 
 class ApproveRejectRevertLoanRequest(APIView):
 
@@ -461,6 +526,31 @@ class ApproveRejectRevertLoanRequest(APIView):
                 action = 'RETURNED'
                 to_role_id = loan_request.created_by.role_id
             
+            elif approval_status == 'disbursed':
+                loan_request.status = 'DISBURSED'
+                loan_request.follower_role_id = None
+                action = 'DISBURSED'
+                to_role_id = None
+
+                # Create Ledger Entry
+                client = loan_request.client
+                ledger_name = f"{client.first_name} {client.last_name} - Loan Ledger"
+                ledger_code = f"{client.client_code}-{loan_request.reference_id}"
+
+                LoanLedger.objects.using(DB_NAME).create(
+                    loan_request=loan_request,
+                    client=client,
+                    ledger_name=ledger_name,
+                    ledger_code=ledger_code,
+                    transaction_date=datetime.now().date(),
+                    particulars=f"Loan Disbursed - Ref: {loan_request.reference_id}",
+                    debit_amount=loan_request.amount,
+                    credit_amount=0,
+                    balance_amount=loan_request.amount,
+                    transaction_type='DISBURSEMENT',
+                    created_by_id=request.user.id
+                )
+            
             else:
                 return Response({
                     globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_INVALID_PARAMS,
@@ -505,6 +595,101 @@ class ApproveRejectRevertLoanRequest(APIView):
                 globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_INTERNAL_SERVER_ERROR,
                 globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_INTERNAL_SERVER_ERROR
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class LoanRequestFindByIdAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request, pk, format=None):
+        try:
+            _ = globalparameters.validation_for_authentication_parameters(request)
+            
+            loan = LoanRequest.objects.using(DB_NAME).filter(reference_id=pk, is_void=False).annotate(
+                referenceId=F('reference_id'),
+                clientName=Concat(
+                    Coalesce(F('client__first_name'), Value('')),
+                    Value(' '),
+                    Coalesce(F('client__middle_name'), Value('')),
+                    Value(' '),
+                    Coalesce(F('client__last_name'), Value(''))
+                ),
+                clientCode=F('client__client_code'),
+                mobileNumber=F('client__mobile_number'),
+                permanentAddress=Concat(
+                    Coalesce(F('client__permanent_municipality__name'), Value('')),
+                    Value('-'),
+                    Coalesce(F('client__permanent_ward_number'), Value('')),
+                    Value(', '),
+                    Coalesce(F('client__permanent_district__name'), Value(''))
+                ),
+                loanType=F('loan_type__reference_id'),
+                loanPurpose=F('loan_purpose__reference_id'),
+                paymentScheme=F('payment_scheme__reference_id'),
+                loanAmount=F('amount'),
+                tenureMonths=F('tenure_months'),
+                interestRate=F('interest_rate'),
+                valueDateAd=F('value_date_ad'),
+                emiDateAd=F('emi_date_ad'),
+                createdBy=F('created_by__username'),
+                createdAt=F('created_at'),
+                updatedBy=F('updated_by__username'),
+                updatedAt=F('updated_at'),
+                canApprove=Case(
+                    When(follower_role_id=request.user.role_id, then=Value(True)),
+                    default=Value(False),
+                    output_field=BooleanField()
+                ),
+                canEdit=Case(
+                    When(follower_role_id=request.user.role_id, then=Value(True)),
+                    default=Value(False),
+                    output_field=BooleanField()
+                ),
+            ).values('referenceId', 'clientName', 'clientCode', 'mobileNumber', 'permanentAddress', 'loanType', 'loanPurpose', 'paymentScheme', 'loanAmount', 'tenureMonths', 'interestRate', 'valueDateAd', 'emiDateAd', 'status', 'remarks', 'createdBy', 'createdAt', 'updatedBy', 'updatedAt', 'canApprove', 'canEdit').first()
+
+            if not loan:
+                return Response({
+                    globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_DATA_NOT_FOUND,
+                    globalparameters.RESULT_DESCRIPTION: "Loan request not found",
+                }, status=status.HTTP_404_NOT_FOUND)
+
+            # Fetch document images
+            loan_request_obj = LoanRequest.objects.using(DB_NAME).filter(reference_id=pk).first()
+            document_images = []
+            if loan_request_obj and loan_request_obj.client and loan_request_obj.client.global_contact_id:
+                lead_quotation = LeadQuotation.objects.using(DB_NAME).filter(
+                    contact_id=loan_request_obj.client.global_contact_id, 
+                    is_void=False
+                ).first()
+                
+                if lead_quotation:
+                    lead_documents = LeadQuotationDocuments.objects.using(DB_NAME).filter(
+                        lead_id=lead_quotation.id, 
+                        is_void=False
+                    )
+                    for doc in lead_documents:
+                        img_base64 = globalparameters.get_image_from_drive(DB_NAME, 'lead_quotation', doc.file_name)
+                        if img_base64:
+                            document_images.append({
+                                'imageValue': img_base64
+                            })
+
+            loan['documentImages'] = document_images
+
+            response_msg = {
+                globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_SUCCESS,
+                globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_DESCRIPTION_SUCCESS,
+                "datas": loan
+            }
+            return Response(response_msg, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(str(e), exc_info=True)
+            error_msg = {
+                globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_INTERNAL_SERVER_ERROR,
+                globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_INTERNAL_SERVER_ERROR
+            }
+            return Response(error_msg, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class LoanRequestTimelineAPIView(APIView):

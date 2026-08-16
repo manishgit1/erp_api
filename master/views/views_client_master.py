@@ -15,7 +15,7 @@ from master.global_validation import validate_for_obj
 from rest_framework.permissions import IsAuthenticated
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from crm.models import LeadQuotation
+from crm.models import LeadQuotation, LeadQuotationDocuments
 
 logger = logging.getLogger('django')
 
@@ -338,6 +338,18 @@ class ClientMasterGetLeadDataAPIView(APIView):
                 'loanType': lead_quotation.loan_type.reference_id if lead_quotation.loan_type_id else '',
                 'clientTemporaryAddress': client_master.temporary_address if client_master.temp_municipality_id else ''
             }
+
+            # fetch lead documents
+            lead_documents = LeadQuotationDocuments.objects.using(DB_NAME).filter(lead_id=lead_quotation.id, is_void=False)
+            document_images = []
+            for doc in lead_documents:
+                img_base64 = globalparameters.get_image_from_drive(DB_NAME, 'lead_quotation', doc.file_name)
+                if img_base64:
+                    document_images.append({
+                        'imageValue': img_base64
+                    })
+            
+            client_data['documentImages'] = document_images
 
             return Response(client_data, status=status.HTTP_200_OK)
 
