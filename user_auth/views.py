@@ -11,7 +11,7 @@ from django.http import JsonResponse
 import logging
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
-from .models import generate_uuid, UserSession
+from .models import generate_uuid, UserSession, default_expiry
 from django.utils import timezone
 from datetime import datetime, timedelta
 from rest_framework.permissions import AllowAny
@@ -115,7 +115,29 @@ class LoginAPIView(APIView):
 
          refresh = RefreshToken.for_user(user)
          access = refresh.access_token
-         
+        # create or update a persistent user session record
+        try:
+            temp_session_id = generate_uuid()
+            session, created = UserSession.objects.get_or_create(
+                user=user,
+                defaults={
+                    'session_id': temp_session_id,
+                    'expiry_date': default_expiry(),
+                    'created_at': timezone.now(),
+                }
+            )
+            if not created:
+                session.session_id = temp_session_id
+                session.expiry_date = default_expiry()
+                session.created_at = timezone.now()
+                session.save()
+
+            user.temp_session_id = temp_session_id
+            user.last_login = timezone.now()
+            user.save()
+        except Exception as e:
+            logger.error(f"Failed to create/update UserSession: {e}", exc_info=True)
+
          json_data = {
             globalparameters.RESULT_CODE : globalparameters.RESULT_CODE_SUCCESS,
             globalparameters.RESULT_DESCRIPTION : globalparameters.RESULT_DESCRIPTION_SUCCESS,

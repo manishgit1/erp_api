@@ -84,9 +84,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class UserSession(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='+')
-    session_id = models.CharField(unique=True)
-    created_at = models.DateTimeField()
-    expiry_date = models.DateTimeField()
+    session_id = models.CharField(unique=True, default=generate_uuid, max_length=64)
+    created_at = models.DateTimeField(default=timezone.now)
+    expiry_date = models.DateTimeField(default=default_expiry)
 
     class Meta:
         managed=False
