@@ -10,4 +10,3 @@ class RequestWorkflow(GenericIdEntity):
 
     class Meta:
         db_table = "request_workflow"
-        managed = False

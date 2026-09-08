@@ -10,3 +10,5 @@ from .views_business_date import *
 from .views_registration_authority import *
 from .views_payment_scheme import *
 from .views_purpose_code import *
+from .views_legal_status import *
+from .views_loan_collateral_type import *

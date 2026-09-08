@@ -7,7 +7,6 @@ from django.db import transaction
 from django.conf import settings
 from master import globalparameters
 import logging
-import datetime
 from master.models import generate_uuid
 
 DB_NAME = settings.DB_NAME
@@ -22,7 +21,7 @@ class SalutationCreateAPIView(APIView):
             user =globalparameters.validation_for_authentication_parameters(request)
             serializer = SalutationSerializer(data=request.data, context={"db_name": DB_NAME})
             if serializer.is_valid():
-                serializer.save(reference_id=generate_uuid(),created_at=datetime.datetime.now(),created_by=user)
+                serializer.save(reference_id=generate_uuid(),created_by=user)
                 response_msg = {
                     globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_SUCCESS,
                     globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_DESCRIPTION_SUCCESS

@@ -33,6 +33,9 @@ urlpatterns = [
     path('loanPurposeCode/create', views.LoanPurposeCodeCreateAPIView.as_view(), name='loan-purpose-create'),
     path('loanPurposeCode/list',views.LoanPurposeCodeListAPIView.as_view(),  name='loan-purpose-list'),
 
+    path('clientNature/list', views.LegalStatusListAPIView.as_view(), name='client-nature-list'),
 
+    path('loanCollateralType/create', views.LoanCollateralTypeCreateAPIView.as_view(), name='loan-collateral-type-create'),
+    path('loanCollateralType/list', views.LoanCollateralTypeListAPIView.as_view(), name='loan-collateral-type-list'),
 
 ]

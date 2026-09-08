@@ -30,7 +30,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 
 
 # Application definition
@@ -106,10 +106,12 @@ DATABASES = {
         'NAME': 'erp_db',
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),  
-        'PORT': config('DB_PORT'),       
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
     }
 }
+
+DATABASE_ROUTERS = ['api.db_router.SameDatabaseRouter']
 
 
 
@@ -196,6 +198,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'standard': {
+            '()': 'api.logging_utils.NepaliTimeFormatter',
             'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
         },
     },
@@ -212,8 +215,13 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True,
+            'level': 'INFO',            # drop framework DEBUG noise, keep INFO/WARNING/ERROR (incl. django.request)
+            'propagate': False,         # avoid double-logging via the root '' logger below
+        },
+        'django.db.backends': {        # suppress SQL query logging
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': False,
         },
         'django.utils.autoreload': {   # suppress autoreload messages
             'handlers': ['file'],

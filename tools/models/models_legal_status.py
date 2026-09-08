@@ -12,4 +12,3 @@ class LegalStatus(GenericIdEntity):
 
     class Meta:
         db_table = "legal_status"
-        managed=False

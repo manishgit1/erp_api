@@ -31,4 +31,3 @@ class LoanType(GenericIdEntity):
 
     class Meta:
         db_table = "loan_type"
-        managed = False

@@ -12,4 +12,3 @@ class RegistrationAuthority(GenericIdEntity):
 
     class Meta:
         db_table = "registration_authority"
-        managed=False

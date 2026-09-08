@@ -9,3 +9,5 @@ from .serializer_education import *
 from .serializer_registration_authority import *
 from .serializer_payment_scheme import *
 from .serializer_purpose_code import *
+from .serializer_legal_status import *
+from .serializer_loan_collateral_type import *

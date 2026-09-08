@@ -11,4 +11,3 @@ class LeadSource(GenericIdEntity):
 
     class Meta:
         db_table = "lead_source"
-        managed=False

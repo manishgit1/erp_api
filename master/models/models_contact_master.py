@@ -7,7 +7,7 @@ def generate_uuid():
 
 class GenericIdEntity(models.Model):
   id = models.BigAutoField(primary_key=True, unique=True, blank=False, null=False)
-  reference_id = models.CharField(max_length=32, default=generate_uuid())
+  reference_id = models.CharField(max_length=32, default=generate_uuid, unique=True)
 
   class Meta:
     abstract = True
@@ -23,9 +23,9 @@ class GenericEntity(GenericIdEntity):
   remarks_in_nepali = models.CharField(max_length=200, blank=True, null=True)
   is_void = models.BooleanField(default=False)
   created_by = models.ForeignKey("user_auth.User",db_column='created_by', on_delete=models.PROTECT, related_name='+')
-  created_at = models.DateTimeField()
+  created_at = models.DateTimeField(auto_now_add=True)
   updated_by = models.ForeignKey("user_auth.User",db_column='updated_by', on_delete=models.PROTECT, related_name='+')
-  updated_at = models.DateTimeField() 
+  updated_at = models.DateTimeField(auto_now=True)
 
 
   class Meta:
@@ -40,7 +40,6 @@ class GlobalProvince(GenericIdEntity):
   
   class Meta:
     db_table = 'global_province'
-    managed = False
 
 
 class GlobalDistrict(GenericIdEntity):
@@ -50,7 +49,6 @@ class GlobalDistrict(GenericIdEntity):
 
   class Meta:
     db_table = 'global_district'
-    managed = False 
  
 
 class GlobalVdcMunicipality(GenericIdEntity):
@@ -92,9 +90,9 @@ class ContactMaster(GenericIdEntity):
    # temp_vdc_municipality = models.ForeignKey(GlobalVdcMunicipality, on_delete=models.PROTECT, related_name='+')
 
    created_by = models.ForeignKey("user_auth.User",db_column='created_by', on_delete=models.PROTECT, related_name='+')
-   created_at = models.DateTimeField()
+   created_at = models.DateTimeField(auto_now_add=True)
    updated_by = models.ForeignKey("user_auth.User",db_column='updated_by', on_delete=models.PROTECT, related_name='+')
-   updated_at = models.DateTimeField()
+   updated_at = models.DateTimeField(auto_now=True)
    is_void = models.BooleanField(default=False)
 
    
@@ -102,4 +100,3 @@ class ContactMaster(GenericIdEntity):
 
    class Meta:
      db_table = 'global_client_contact'
-     managed = False

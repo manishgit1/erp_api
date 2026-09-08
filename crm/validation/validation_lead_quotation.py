@@ -3,18 +3,15 @@ from master.models import ContactMaster
 from master.global_validation import validate_by_reference_id, validate_decimal_value
 from tools.models import LoanType, LeadSource
 import datetime
-from crm.models import LeadQuotation
-from django.db.models import  Max
+from django.db import connections
 from user_auth.models import generate_uuid
 
 def generate_quotation_number(db_name):
-   max_number = LeadQuotation.objects.using(db_name).aggregate(
-      Max("quotation_number")
-   )["quotation_number__max"]
-
-   if max_number:
-      return int(max_number + 1)
-   return 2
+   # nextval() on a Postgres sequence is atomic under concurrency, unlike a
+   # SELECT MAX(quotation_number) + 1 read-then-insert (see crm migration 0005).
+   with connections[db_name].cursor() as cursor:
+      cursor.execute("SELECT nextval('lead_quotation_number_seq')")
+      return cursor.fetchone()[0]
 
 
 def validate_lead_quotation(request,db_name,pk):

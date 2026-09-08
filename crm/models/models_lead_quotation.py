@@ -8,7 +8,7 @@ from tools.models import LoanType, LeadSource
 
 class LeadQuotation(GenericIdEntity):
    
-    quotation_number = models.IntegerField(null=True, blank=True)
+    quotation_number = models.IntegerField(null=True, blank=True, unique=True)
     contact = models.ForeignKey(
         ContactMaster, 
         on_delete=models.PROTECT,
@@ -58,4 +58,3 @@ class LeadQuotation(GenericIdEntity):
 
     class Meta:
         db_table = "lead_quotation_registration"
-        managed = False

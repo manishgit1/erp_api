@@ -89,7 +89,6 @@ class UserSession(models.Model):
     expiry_date = models.DateTimeField(default=default_expiry)
 
     class Meta:
-        managed=False
         db_table = "user_session"
 
     def save(self, *args, **kwargs):
@@ -113,4 +112,3 @@ class UserRole(GenericIdEntity):
 
     class Meta:
         db_table = "roles"
-        managed = False

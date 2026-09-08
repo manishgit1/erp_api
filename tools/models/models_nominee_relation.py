@@ -12,4 +12,3 @@ class NomineeRelation(GenericIdEntity):
 
     class Meta:
         db_table = "nominee_relation"
-        managed=False

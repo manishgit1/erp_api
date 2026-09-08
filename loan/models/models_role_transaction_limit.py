@@ -31,7 +31,6 @@ class RoleTransactionLimit(GenericIdEntity):
 
     class Meta:
         db_table = "role_transaction_limit"
-        managed = False
 
     def __str__(self):
         return f"{self.role.name} - {self.limit_amount}"

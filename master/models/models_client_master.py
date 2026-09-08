@@ -69,7 +69,6 @@ class ClientMaster(GenericIdEntity):
 
     class Meta:
         db_table = "client_master"
-        managed = False
 
 
     @property

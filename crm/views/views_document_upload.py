@@ -77,13 +77,11 @@ class DocumentUploadUploadAPIView(APIView):
             lead_id = str(data['leadId']).strip() if 'leadId' in data else ''
             lead_id,lead_error_list = validate_by_reference_id(lead_id, DB_NAME, LeadQuotation, 'Lead Quotation')
             if lead_id:
-               lead_documents = LeadQuotationDocuments.objects.using(DB_NAME).create(
+               LeadQuotationDocuments.objects.using(DB_NAME).create(
                      reference_id = generate_uuid(),
-                     file_name=file_name
+                     file_name=file_name,
+                     lead_id=lead_id,
                )
-               lead_documents.lead_id = lead_id
-               lead_documents.created_at = datetime.datetime.now()
-               lead_documents.save()
          else:
             json_error.append("Empty or Invalid Image Provided!")
          if json_error:

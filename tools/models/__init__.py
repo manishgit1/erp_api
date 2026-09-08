@@ -11,3 +11,4 @@ from .models_legal_status import *
 from .models_registration_authority import *
 from .models_loan_payment_scheme import *
 from .models_loan_purpose_code import *
+from .models_loan_collateral_type import *

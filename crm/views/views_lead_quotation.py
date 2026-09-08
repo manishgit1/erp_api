@@ -9,13 +9,12 @@ from crm.validation import validate_lead_quotation
 from django.db.models import F, Func, Value, CharField
 from crm.models import LeadQuotation
 from django.db.models.functions import TruncMinute
-import json
 DB_NAME = settings.DB_NAME
 
 logger = logging.getLogger('django')
 
 class LeadQuotationCreateAPIView(APIView):
-   
+
    @transaction.atomic
    def post(self,request,*args,**kwargs):
       try:
@@ -29,12 +28,30 @@ class LeadQuotationCreateAPIView(APIView):
                globalparameters.RESULT_ERROR: json_error
             }
             return Response(response_msg, status=status.HTTP_400_BAD_REQUEST)
-         
-         query = "select * from insert_update_lead_quotation_registration(%s)"
-         params = [json.dumps(lead_quotation_json)]
 
-         return globalparameters.execute_raw_sql(request,query,params,DB_NAME)
-      
+         user = globalparameters.validation_for_authentication_parameters(request)
+         reference_id = lead_quotation_json.pop('reference_id')
+         # purpose_code isn't a real field on LeadQuotation yet (commented out on the model)
+         lead_quotation_json.pop('purpose_code_id', None)
+         lead_quotation_json['created_by'] = user.id if user else None
+         # approval_remarks/reject_remarks are required (no default) but only
+         # get filled in later during the document-approval workflow
+         lead_quotation_json.setdefault('approval_remarks', '')
+         lead_quotation_json.setdefault('reject_remarks', '')
+
+         lead_quotation, _ = LeadQuotation.objects.using(DB_NAME).update_or_create(
+            reference_id=reference_id,
+            defaults=lead_quotation_json,
+         )
+
+         response_msg = {
+            globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_SUCCESS,
+            globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_DESCRIPTION_SUCCESS,
+            "referenceId": lead_quotation.reference_id,
+            "quotationNumber": lead_quotation.quotation_number,
+         }
+         return Response(response_msg, status=status.HTTP_200_OK)
+
       except Exception as e:
          logger.error(str(e), exc_info=True)
          error_msg = {

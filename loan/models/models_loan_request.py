@@ -52,7 +52,6 @@ class LoanRequest(GenericIdEntity):
 
     class Meta:
         db_table = "loan_request"
-        managed = False
 
     def __str__(self):
         return f"Loan Request for {self.client} - {self.amount}"
@@ -110,7 +109,6 @@ class LoanRequestHistory(GenericIdEntity):
 
     class Meta:
         db_table = 'loan_request_history'
-        managed=False
 
     def __str__(self):
         return f"{self.loan_request_id} - {self.action}"

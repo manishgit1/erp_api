@@ -31,7 +31,6 @@ class LoanLedger(GenericIdEntity):
 
     class Meta:
         db_table = "loan_ledger"
-        managed = False
 
     def __str__(self):
         return f"{self.ledger_code} - {self.ledger_name} - {self.transaction_type}"
