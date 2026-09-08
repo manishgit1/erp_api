@@ -20,29 +20,35 @@ class ContactMasterCreateAPIView(APIView):
    
    def post(self,request,*args,**kwargs):
     try:
+       user = globalparameters.validation_for_authentication_parameters(request)
        if request.data['citizenshipIssuedDateAd']:
           request.data['citizenshipIssuedDateBs'] = converter.ad_to_bs(str(request.data['citizenshipIssuedDateAd']))
           request.data['citizenshipIssuedDateAd'] = datetime.strftime(datetime.strptime(str(request.data['citizenshipIssuedDateAd']), '%Y/%M/%d'), '%Y-%M-%d')
        serializer = GlobalContactSerializer(data=request.data, context={'db_name':DB_NAME, 'model_class': ContactMaster})
        serializer.is_valid(raise_exception=True)
-       serializer.save(created_at=datetime.now())
+       serializer.save(created_by=user, updated_by=user)
 
-       success_msg = {       
+       success_msg = {
             globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_SUCCESS,
-            globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_DESCRIPTION_SUCCESS  
+            globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_DESCRIPTION_SUCCESS
        }
        return Response(success_msg, status=status.HTTP_200_OK)
     
     except ValidationError as exc:
         logger.error(str(exc), exc_info=True)
-        raise ValidationError(self,exc.message)
-    
+        error_msg = {
+            globalparameters.RESULT_CODE: globalparameters.RESULT_VALIDATION_ERROR,
+            globalparameters.RESULT_DESCRIPTION: str(exc.detail)
+        }
+        return Response(error_msg,status=status.HTTP_400_BAD_REQUEST)
+
     except Exception as exc: 
         logger.error(str(exc), exc_info=True)
         error_msg = {
                 globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_INTERNAL_SERVER_ERROR,
                 globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_INTERNAL_SERVER_ERROR
             }
+        return Response(error_msg, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class GlobalContactListAPIView(APIView):
 
@@ -88,7 +94,7 @@ class CheckIfGlobalContactExistsAPIView(APIView):
                     globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_DATA_NOT_FOUND,
                     globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_DATA_NOT_FOUND
                 }
-                return Response(response_msg, status=status.HTTP_404_NOT_FOUND)
+                return Response(response_msg, status=status.HTTP_200_OK)
         
         except Exception as exc:
             logger.error(str(exc), exc_info=True)
@@ -125,18 +131,18 @@ class ContactMasterEditAPIView(APIView):
    
    def post(self,request,pk,*args,**kwargs):
     try:
-       print("hello")
+       user = globalparameters.validation_for_authentication_parameters(request)
        if request.data['citizenshipIssuedDateAd']:
           request.data['citizenshipIssuedDateBs'] = converter.ad_to_bs(str(request.data['citizenshipIssuedDateAd']))
           request.data['citizenshipIssuedDateAd'] = datetime.strftime(datetime.strptime(str(request.data['citizenshipIssuedDateAd']), '%Y/%M/%d'), '%Y-%M-%d')
        contact_master = ContactMaster.objects.using(DB_NAME).filter(is_void=False,reference_id=pk).first()
        serializer = GlobalContactSerializer(instance=contact_master,data=request.data,partial=True ,context={'db_name':DB_NAME, 'model_class': ContactMaster})
        serializer.is_valid(raise_exception=True)
-       serializer.save(created_at=datetime.now())
+       serializer.save(updated_by=user)
 
-       success_msg = {       
+       success_msg = {
             globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_SUCCESS,
-            globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_DESCRIPTION_SUCCESS  
+            globalparameters.RESULT_DESCRIPTION: globalparameters.RESULT_DESCRIPTION_SUCCESS
        }
        return Response(success_msg, status=status.HTTP_200_OK)
     

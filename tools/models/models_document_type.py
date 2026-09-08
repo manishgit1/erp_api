@@ -7,9 +7,8 @@ class DocumentType(GenericIdEntity):
     remarks = models.TextField(blank=True, null=True)
     # remarks_in_nepali = models.TextField(blank=True, null=True)
     is_void = models.BooleanField(default=False)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey("user_auth.User",db_column='created_by',on_delete=models.PROTECT, related_name='+')
 
     class Meta:
         db_table = "document_type"
-        managed=False

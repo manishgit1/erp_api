@@ -1,3 +1,4 @@
+from unicodedata import name
 from django.urls import path
 from master import views
 
@@ -16,5 +17,11 @@ urlpatterns = [
   path('contact/checkIfContactExists/', views.CheckIfGlobalContactExistsAPIView.as_view(), name='check-if-global-contact-exists'),
   path('vdcMunicipality/getAddressInfo/', views.AddressInfoAPIView.as_view(), name='address-info-by-municipality'),
 
+  path('clientMaster/create', views.ClientMasterCreateAPIView.as_view(), name='client-master-create'),
   path('clientMaster/checkIfClientExists/',views.CheckIfClientMasterExistsAPIView.as_view(),name='check-if-client-exists'),
+  path('clientMaster/list',views.ClientMasterListAPIView.as_view(),name='client-master-list'),
+  path('clientMaster/<str:pk>/findById', views.ClientMasterDataByIdAPIView.as_view(), name='client-master-data-by-id-api'),
+  path('clientMaster/<str:pk>/edit', views.ClientMasterEditAPIView.as_view(), name='client-master-edit'),
+  path('clientMaster/getLeadData/',views.ClientMasterGetLeadDataAPIView.as_view(),name='client-master-get-lead-data'),
+  path('dashboard/metrics/', views.DashboardMetricsAPIView.as_view(), name='dashboard-metrics'),
 ]

@@ -11,11 +11,19 @@ from crm.models import LeadQuotation
 from django.db.models import F, Value
 from django.db.models.functions import Coalesce, Concat
 import json
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+
 DB_NAME = settings.DB_NAME
 
 logger = logging.getLogger('django')
 
 class ApprovedDocumentsListDataAPIView(APIView):
+
+   permission_classes = [IsAuthenticated]
+   authentication_classes = [JWTAuthentication]
+
    
    def get(self,request,format=None):
       json_error = []

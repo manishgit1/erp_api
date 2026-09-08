@@ -8,6 +8,9 @@ from django.db.models import F
 from master.models import GlobalVdcMunicipality
 import json
 import ast
+from django.conf import settings
+
+DB_NAME = settings.DB_NAME
 
 logger = logging.getLogger('django')
 
@@ -76,7 +79,7 @@ class AddressInfoAPIView(APIView):
             return Response({"error": "Municipality cannot be blank"},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        address = GlobalVdcMunicipality.objects.filter(reference_id=municipality_id).annotate(
+        address = GlobalVdcMunicipality.objects.using(DB_NAME).filter(reference_id=municipality_id).annotate(
             districtId=F("district__reference_id"),
             provinceId=F("district__province__reference_id"),
         ).values("districtId", "provinceId").first()

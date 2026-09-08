@@ -38,7 +38,13 @@ class DocumentApprovalListDataAPIView(APIView):
                globalparameters.RESULT_DESCRIPTION : globalparameters.RESULT_DESCRIPTION_SUCCESS,
                "datas": lead_quotation_data
             }
-            return Response(response_msg, status=status.HTTP_200_OK)
+          else:
+            response_msg = {
+               globalparameters.RESULT_CODE: globalparameters.RESULT_CODE_DATA_NOT_FOUND,
+               globalparameters.RESULT_DESCRIPTION : globalparameters.RESULT_DATA_NOT_FOUND,
+               "datas": []
+            }
+          return Response(response_msg, status=status.HTTP_200_OK)
       
       except Exception as exc:
         logger.error(str(exc), exc_info=True)

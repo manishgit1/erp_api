@@ -16,4 +16,6 @@ urlpatterns = [
   path('documentApproval/rejectApprove/create',views.DocumentApprovalRejectApproveCreateAPIView.as_view(), name='document-approval-reject-approve'),
 
   path('approvedDocuments/list', views.ApprovedDocumentsListDataAPIView.as_view(), name='approved-documents-list'),
+
+  path('leadQuotation/getEmiSchedule', views.EMIScheduleAPIView.as_view(), name='emi-schedule'),
 ]

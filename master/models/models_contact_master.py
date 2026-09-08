@@ -7,7 +7,7 @@ def generate_uuid():
 
 class GenericIdEntity(models.Model):
   id = models.BigAutoField(primary_key=True, unique=True, blank=False, null=False)
-  reference_id = models.CharField(max_length=32, default=generate_uuid())
+  reference_id = models.CharField(max_length=32, default=generate_uuid, unique=True)
 
   class Meta:
     abstract = True
@@ -15,7 +15,17 @@ class GenericIdEntity(models.Model):
 
 class GenericEntity(GenericIdEntity):
   name = models.CharField(max_length=100)
+  name_in_nepali = models.CharField(max_length=100)
+
   alias = models.CharField(max_length=100)
+
+  remarks = models.CharField(max_length=200, blank=True, null=True)
+  remarks_in_nepali = models.CharField(max_length=200, blank=True, null=True)
+  is_void = models.BooleanField(default=False)
+  created_by = models.ForeignKey("user_auth.User",db_column='created_by', on_delete=models.PROTECT, related_name='+')
+  created_at = models.DateTimeField(auto_now_add=True)
+  updated_by = models.ForeignKey("user_auth.User",db_column='updated_by', on_delete=models.PROTECT, related_name='+')
+  updated_at = models.DateTimeField(auto_now=True)
 
 
   class Meta:
@@ -23,22 +33,27 @@ class GenericEntity(GenericIdEntity):
 
 
 
-class GlobalProvince(GenericEntity):
+class GlobalProvince(GenericIdEntity):
+
+  name = models.CharField(max_length=100)
+  alias = models.CharField(max_length=100)
   
   class Meta:
     db_table = 'global_province'
-    managed = False
 
 
-class GlobalDistrict(GenericEntity):
+class GlobalDistrict(GenericIdEntity):
+  name = models.CharField(max_length=100)
+  alias = models.CharField(max_length=100)
   province = models.ForeignKey(GlobalProvince, on_delete=models.PROTECT)
 
   class Meta:
     db_table = 'global_district'
-    managed = False 
  
 
-class GlobalVdcMunicipality(GenericEntity):
+class GlobalVdcMunicipality(GenericIdEntity):
+  name = models.CharField(max_length=100)
+  alias = models.CharField(max_length=100)
   district = models.ForeignKey(GlobalDistrict, on_delete=models.PROTECT)
 
   class Meta:
@@ -69,14 +84,15 @@ class ContactMaster(GenericIdEntity):
    permanent_district = models.ForeignKey(GlobalDistrict, on_delete=models.PROTECT, related_name='+')
    permanent_province = models.ForeignKey(GlobalProvince, on_delete=models.PROTECT, related_name='+')
    permanent_vdc_municipality = models.ForeignKey(GlobalVdcMunicipality, on_delete=models.PROTECT, related_name='+')
+   permanent_ward_number = models.CharField(max_length=100,blank=True,null=True)
    # temp_district = models.ForeignKey(GlobalDistrict, on_delete=models.PROTECT, related_name='+')
    # temp_province = models.ForeignKey(GlobalProvince, on_delete=models.PROTECT, related_name='+')
    # temp_vdc_municipality = models.ForeignKey(GlobalVdcMunicipality, on_delete=models.PROTECT, related_name='+')
 
    created_by = models.ForeignKey("user_auth.User",db_column='created_by', on_delete=models.PROTECT, related_name='+')
-   created_at = models.DateTimeField()
+   created_at = models.DateTimeField(auto_now_add=True)
    updated_by = models.ForeignKey("user_auth.User",db_column='updated_by', on_delete=models.PROTECT, related_name='+')
-   updated_at = models.DateTimeField()
+   updated_at = models.DateTimeField(auto_now=True)
    is_void = models.BooleanField(default=False)
 
    
@@ -84,4 +100,3 @@ class ContactMaster(GenericIdEntity):
 
    class Meta:
      db_table = 'global_client_contact'
-     managed = False

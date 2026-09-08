@@ -10,5 +10,4 @@ class SystemDay(GenericIdEntity):
     class Meta:
         ordering = ['-business_date_ad']
         db_table = 'system_day'
-        managed = False
 

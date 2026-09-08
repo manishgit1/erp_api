@@ -1,0 +1,35 @@
+services:
+  erp-db:
+    image: postgres:16
+    container_name: erp-db
+    env_file: api/.env
+    environment:
+      POSTGRES_DB: ${DB_NAME:-erp_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  erp-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: erp-app
+    env_file: api/.env
+    depends_on:
+      - erp-db
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "8004:8004"
+    environment:
+      DB_HOST: erp-db
+      DB_PORT: 5432
+      DEBUG: "1"
+    command: >
+      sh -c "python manage.py migrate master --noinput && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8004"
+
+volumes:
+  postgres_data:

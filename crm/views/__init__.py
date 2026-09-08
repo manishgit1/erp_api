@@ -4,3 +4,4 @@ from .views_document_upload import *
 from .views_document_approval import *
 from .views_print_modal_search import *
 from .views_approved_documents import *
+from .views_emi_schedule import *

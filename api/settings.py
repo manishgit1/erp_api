@@ -14,6 +14,9 @@ from pathlib import Path
 
 from decouple import config, RepositoryEnv, Config
 
+from datetime import timedelta
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,7 +30,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 
 
 # Application definition
@@ -37,12 +40,14 @@ INSTALLED_APPS = [
     'master',
     'crm',
     'tools',
+    'loan',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
@@ -101,11 +106,36 @@ DATABASES = {
         'NAME': 'erp_db',
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),  
-        'PORT': config('DB_PORT'),       
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
     }
 }
 
+DATABASE_ROUTERS = ['api.db_router.SameDatabaseRouter']
+
+
+
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'user_auth.authentication.TempSessionAuthentication',
+#         'rest_framework.authentication.BasicAuthentication',
+#         'rest_framework.authentication.SessionAuthentication',
+#     ),
+#     'DEFAULT_PERMISSION_CLASSES': (
+#         'rest_framework.permissions.IsAuthenticated',
+#     ),
+#     'EXCEPTION_HANDLER': 'master.globalparameters.custom_exception_handler',
+# }
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
+    "EXCEPTION_HANDLER": 'master.globalparameters.custom_exception_handler',
+}
 
 
 # Password validation
@@ -125,6 +155,18 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+
+
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(config('ACCESS_TOKEN_LIFETIME_MINUTES', default=15))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(config('REFRESH_TOKEN_LIFETIME_DAYS', default=7))),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+}
+
+
 
 
 # Internationalization
@@ -156,6 +198,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'standard': {
+            '()': 'api.logging_utils.NepaliTimeFormatter',
             'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
         },
     },
@@ -172,8 +215,13 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True,
+            'level': 'INFO',            # drop framework DEBUG noise, keep INFO/WARNING/ERROR (incl. django.request)
+            'propagate': False,         # avoid double-logging via the root '' logger below
+        },
+        'django.db.backends': {        # suppress SQL query logging
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': False,
         },
         'django.utils.autoreload': {   # suppress autoreload messages
             'handlers': ['file'],
@@ -192,3 +240,5 @@ LOGGING = {
 AUTH_USER_MODEL = 'user_auth.User'
 
 DB_NAME = config('MASTER_DB')
+
+
